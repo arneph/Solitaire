@@ -158,7 +158,7 @@ public class BoardView extends JPanel implements ActionListener,
 			}
 			
 			startTime = System.currentTimeMillis();
-			endTime = startTime + 20;
+			endTime = startTime + 500;
 			
 		}else{
 			if (nextMove.getDestination() == board.getDeck()) {
@@ -170,7 +170,7 @@ public class BoardView extends JPanel implements ActionListener,
 				nextMove = null;
 				
 				startTime = System.currentTimeMillis();
-				endTime = startTime + 10;
+				endTime = startTime + 250;
 				
 				return;
 			}
@@ -246,7 +246,7 @@ public class BoardView extends JPanel implements ActionListener,
 			nextMove = null;
 			
 			startTime = System.currentTimeMillis();
-			endTime = startTime + 20;
+			endTime = startTime + 500;
 		}
 	}
 	

@@ -49,7 +49,7 @@ public class Board {
 		for (int i = 0; i < 52; i++) {
 			cards[i] = Card.values()[Cards.Card.ClubAce.ordinal() + i];
 		}
-		/*
+		
 		Random r = new Random(System.currentTimeMillis());
 		
 		for (int i = 0; i < 52; i++) {
@@ -60,7 +60,7 @@ public class Board {
 			
 			cards[i] = b;
 			cards[j] = a;
-		}*/
+		}
 		
 		return cards;
 	}

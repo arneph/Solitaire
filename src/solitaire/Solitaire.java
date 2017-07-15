@@ -31,7 +31,7 @@ public class Solitaire {
 		window.setLocationRelativeTo(null);
 		window.setVisible(true);
 		
-		AI ai = new RandomAI();
+		AI ai = new BasicAI();
 		
 		ai.setBoard(view.getBoard());
 		
