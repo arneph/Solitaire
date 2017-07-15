@@ -25,6 +25,14 @@ public class Deck extends BoardElement {
 		return deck[index];
 	}
 	
+	public int getIndexOfCardOnDeck(Card card) {
+		for (int i = 0; i < deck.length; i++) {
+			if (deck[i] == card) return i;
+		}
+		
+		return -1;
+	}
+	
 	public Card[] getDeck() {
 		return deck;
 	}
@@ -57,6 +65,14 @@ public class Deck extends BoardElement {
 		return Arrays.copyOfRange(deckStack, 
 		                          Math.max(0, deckStack.length - 3), 
 		                          Math.max(0, deckStack.length));
+	}
+	
+	public int getIndexOfCardOnDeckStack(Card card) {
+		for (int i = 0; i < deckStack.length; i++) {
+			if (deckStack[i] == card) return i;
+		}
+		
+		return -1;
 	}
 	
 	public Card getTopCardOnDeckStack() {

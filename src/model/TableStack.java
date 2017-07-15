@@ -35,6 +35,14 @@ public class TableStack extends BoardElement {
 		return Arrays.copyOfRange(stack, startIndex, endIndex);
 	}
 	
+	public int getIndexOfCard(Card card) {
+		for (int i = 0; i < stack.length; i++) {
+			if (stack[i] == card) return i;
+		}
+		
+		return -1;
+	}
+	
 	public Card[] getStack() {
 		return stack;
 	}
