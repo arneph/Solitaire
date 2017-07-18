@@ -115,7 +115,8 @@ public class BoardView extends JPanel implements ActionListener,
 	
 	private void prepareForMove() {
 		if (move == null || 
-			move.isPossible() == false) {
+			move.isPossible() == false || 
+			move.getBoard() != board) {
 			return;
 		}
 		

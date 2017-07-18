@@ -120,4 +120,13 @@ public class TableStack extends BoardElement {
 		}
 	}
 	
+	public TableStack clone() {
+		TableStack t = new TableStack();
+		
+		t.stack = stack.clone();
+		t.coveredCards = coveredCards;
+		
+		return t;
+	}
+	
 }

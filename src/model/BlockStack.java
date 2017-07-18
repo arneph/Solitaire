@@ -85,4 +85,12 @@ public class BlockStack extends BoardElement {
 		return stack.length == 13;
 	}
 	
+	public BlockStack clone() {
+		BlockStack b = new BlockStack();
+		
+		b.stack = stack.clone();
+		
+		return b;
+	}
+	
 }

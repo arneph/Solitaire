@@ -143,4 +143,13 @@ public class Deck extends BoardElement {
 		deckStack = Arrays.copyOf(deckStack, n - 1);
 	}
 	
+	public Deck clone() {
+		Deck d = new Deck();
+		
+		d.deck = deck.clone();
+		d.deckStack = deckStack.clone();
+		
+		return d;
+	}
+	
 }

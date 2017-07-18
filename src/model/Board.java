@@ -89,6 +89,20 @@ public class Board {
 		return tableStacks;
 	}
 	
+	public int getNumberOfEmptyTableStacks() {
+		int n = 0;
+		
+		if (tableStacks[0].getNumberOfCardsOnStack() == 0) n++;
+		if (tableStacks[1].getNumberOfCardsOnStack() == 0) n++;
+		if (tableStacks[2].getNumberOfCardsOnStack() == 0) n++;
+		if (tableStacks[3].getNumberOfCardsOnStack() == 0) n++;
+		if (tableStacks[4].getNumberOfCardsOnStack() == 0) n++;
+		if (tableStacks[5].getNumberOfCardsOnStack() == 0) n++;
+		if (tableStacks[6].getNumberOfCardsOnStack() == 0) n++;
+		
+		return n;
+	}
+	
 	public int getNumberOfCoveredCardsOnTableStacks() {
 		int n = 0;
 		
@@ -398,6 +412,62 @@ public class Board {
 		}
 	}
 	
+	public Move equivalentMove(Move move) {
+		if (move instanceof DeckMove) {
+			if (deck.getTotalNumberOfCardsOnDeck() > 0) {
+				return new DeckMove(this);
+			}else{
+				return null;
+			}
+			
+		}else if (move instanceof CardMove) {
+			CardMove originalCardMove = (CardMove) move;
+			
+			Board originalBoard = originalCardMove.getBoard();
+			BoardElement originalOrigin = originalCardMove.getOrigin();
+			BoardElement originalDesitnation = originalCardMove.getDestination();
+			
+			BoardElement origin = null;
+			BoardElement destination = null;
+			int count = originalCardMove.getCount();
+			
+			if (originalOrigin instanceof Deck) {
+				origin = deck;
+				
+			}else if (originalOrigin instanceof TableStack) {
+				int index = originalBoard.getIndexOfTableStack((TableStack) originalOrigin);
+				
+				origin = tableStacks[index];
+				
+			}else if (originalOrigin instanceof BlockStack) {
+				int index = originalBoard.getIndexOfBlockStack((BlockStack) originalOrigin);
+				
+				origin = blockStacks[index];
+			}
+			
+			if (originalDesitnation instanceof TableStack) {
+				int index = originalBoard.getIndexOfTableStack((TableStack) originalDesitnation);
+				
+				destination = tableStacks[index];
+				
+			}else if (originalDesitnation instanceof BlockStack) {
+				int index = originalBoard.getIndexOfBlockStack((BlockStack) originalDesitnation);
+				
+				destination = blockStacks[index];
+			}
+			
+			CardMove cardMove = new CardMove(this, origin, destination, count);
+			
+			if (cardMove.isPossible()) {
+				return cardMove;
+			}else{
+				return null;
+			}
+		}
+		
+		return null;
+	}
+	
 	public boolean canFinishGameAutomatically() {
 		if (isGameOver()) {
 			return false;
@@ -480,6 +550,27 @@ public class Board {
 		if (blockStacks[3].isComplete() == false) return false;
 		
 		return true;
+	}
+	
+	public Board clone() {
+		Board b = new Board();
+		
+		b.deck = deck.clone();
+		
+		b.tableStacks[0] = tableStacks[0].clone();
+		b.tableStacks[1] = tableStacks[1].clone();
+		b.tableStacks[2] = tableStacks[2].clone();
+		b.tableStacks[3] = tableStacks[3].clone();
+		b.tableStacks[4] = tableStacks[4].clone();
+		b.tableStacks[5] = tableStacks[5].clone();
+		b.tableStacks[6] = tableStacks[6].clone();
+		
+		b.blockStacks[0] = blockStacks[0].clone();
+		b.blockStacks[1] = blockStacks[1].clone();
+		b.blockStacks[2] = blockStacks[2].clone();
+		b.blockStacks[3] = blockStacks[3].clone();
+		
+		return b;
 	}
 	
 }
