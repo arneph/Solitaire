@@ -17,7 +17,7 @@ public class BoardView extends JPanel implements ActionListener,
 													 MouseMotionListener {
 	private Board board;
 	private AI ai;
-	private Move nextMove;
+	private Move move;
 	
 	private Card[] draggedCards;
 	private BoardElement dragOrigin;
@@ -38,7 +38,7 @@ public class BoardView extends JPanel implements ActionListener,
 	public BoardView() {
 		board = new Board();
 		ai = null;
-		nextMove = null;
+		move = null;
 		
 		draggedCards = null;
 		dragOrigin = null;
@@ -96,47 +96,49 @@ public class BoardView extends JPanel implements ActionListener,
 		}
 		
 		ai = a;
-		nextMove = null;
+		move = null;
 		
 		if (ai == null) {
 			addMouseListener(this);
 			addMouseMotionListener(this);
 			
 		}else{
-			makeMove();
+			move = ai.getNextMove();
+			
+			if (move != null) {
+				prepareForMove();
+			}
 		}
 		
 		repaint();
 	}
 	
-	private void makeMove() {
-		if (ai == null) {
+	private void prepareForMove() {
+		if (move == null || 
+			move.isPossible() == false) {
 			return;
 		}
 		
-		if (nextMove == null) {
-			nextMove = ai.getNextMove();
+		cursorStartPosition = cursorCurrentPosition;
+		
+		if (move instanceof DeckMove) {
+			int centerX = (int) getRectangleOfDeck().getCenterX();
+			int centerY = (int) getRectangleOfDeck().getCenterY();
 			
-			if (nextMove == null) return;
+			cursorEndPosition = new Point(centerX, centerY);
 			
-			cursorStartPosition = cursorCurrentPosition;
+		}else if (move instanceof CardMove) {
+			CardMove cardMove = (CardMove) move;
 			
-			if (nextMove.getOrigin() == board.getDeck() && 
-				nextMove.getDestination() == board.getDeck()) {
-				int centerX = (int) getRectangleOfDeck().getCenterX();
-				int centerY = (int) getRectangleOfDeck().getCenterY();
-				
-				cursorEndPosition = new Point(centerX, centerY);
-				
-			}else if (nextMove.getOrigin() == board.getDeck()) {
+			if (cardMove.getOrigin() == board.getDeck()) {
 				int centerX = (int) getRectangleOfTopCardOnDeckStack().getCenterX();
 				int centerY = (int) getRectangleOfTopCardOnDeckStack().getCenterY();
 				
 				cursorEndPosition = new Point(centerX, centerY);
 				
-			}else if (nextMove.getOrigin() instanceof TableStack) {
-				int stackIndex = board.getIndexOfTableStack((TableStack) nextMove.getOrigin());
-				int m = nextMove.getCount();
+			}else if (cardMove.getOrigin() instanceof TableStack) {
+				int stackIndex = board.getIndexOfTableStack((TableStack) cardMove.getOrigin());
+				int m = cardMove.getCount();
 				int n = board.getTableStackAtIndex(stackIndex).getNumberOfCardsOnStack();
 				
 				int centerX = (int) getRectangleOfCardOnTableStack(stackIndex, n - m).getCenterX();
@@ -148,8 +150,8 @@ public class BoardView extends JPanel implements ActionListener,
 				
 				cursorEndPosition = new Point(centerX, centerY);
 				
-			}else if (nextMove.getOrigin() instanceof BlockStack) {
-				int stackIndex = board.getIndexOfBlockStack((BlockStack) nextMove.getOrigin());
+			}else if (cardMove.getOrigin() instanceof BlockStack) {
+				int stackIndex = board.getIndexOfBlockStack((BlockStack) cardMove.getOrigin());
 				
 				int centerX = (int) getRectangleOfBlockStack(stackIndex).getCenterX();
 				int centerY = (int) getRectangleOfBlockStack(stackIndex).getCenterY();
@@ -157,84 +159,76 @@ public class BoardView extends JPanel implements ActionListener,
 				cursorEndPosition = new Point(centerX, centerY);
 			}
 			
+		}
+		
+		startTime = System.currentTimeMillis();
+		endTime = startTime + 500;
+	}
+	
+	private void performMove() {
+		if (move == null || 
+			move.isPossible() == false) {
+			return;
+		}
+			
+		if (move instanceof DeckMove) {
+			board.applyMove(move);
+			
+			cursorStartPosition = cursorCurrentPosition;
+			cursorEndPosition = cursorCurrentPosition;
+			
+			move = null;
+			
 			startTime = System.currentTimeMillis();
-			endTime = startTime + 500;
+			endTime = startTime + 100;
 			
-		}else{
-			if (nextMove.getDestination() == board.getDeck()) {
-				board.getDeck().turnDeck();
-				
-				cursorStartPosition = cursorCurrentPosition;
-				cursorEndPosition = cursorCurrentPosition;
-				
-				nextMove = null;
-				
-				startTime = System.currentTimeMillis();
-				endTime = startTime + 250;
-				
-				return;
-			}
+		}else if (move instanceof CardMove) {
+			CardMove cardMove = (CardMove) move;
 			
-			dragOrigin = nextMove.getOrigin();
-			dragDestination = nextMove.getDestination();
+			draggedCards = board.getCardsInMove(cardMove);
+			dragOrigin = cardMove.getOrigin();
+			dragDestination = cardMove.getDestination();
 			
-			if (dragOrigin == board.getDeck()) {
-				draggedCards = new Card[] {board.getDeck().getTopCardOnDeckStack()};
-				
+			if (dragOrigin instanceof Deck) {
 				dragStartRectangles = new Rectangle[] {getRectangleOfTopCardOnDeckStack()};
-				
-				board.getDeck().removeCardFromDeckStack();
-			}
 			
-			for (int i = 0; i < 7; i++) {
-				if (dragOrigin != board.getTableStackAtIndex(i)) continue;
+			}else if (dragOrigin instanceof TableStack) {
+				int stackIndex = board.getIndexOfTableStack((TableStack) dragOrigin);
+				int startIndex = ((TableStack) dragOrigin).getNumberOfCardsOnStack() - cardMove.getCount();
 				
-				int startIndex = board.getTableStackAtIndex(i).getNumberOfCardsOnStack() - nextMove.getCount();
+				dragStartRectangles = new Rectangle[cardMove.getCount()];
 				
-				draggedCards = board.getTableStackAtIndex(i).getCardsInRange(startIndex, startIndex + nextMove.getCount());
-				
-				dragStartRectangles = new Rectangle[nextMove.getCount()];
-				
-				for (int j = 0; j < nextMove.getCount(); j++) {
-					dragStartRectangles[j] = getRectangleOfCardOnTableStack(i, startIndex + j);
+				for (int j = 0; j < cardMove.getCount(); j++) {
+					dragStartRectangles[j] = getRectangleOfCardOnTableStack(stackIndex, startIndex + j);
 				}
 				
-				board.getTableStackAtIndex(i).removeCardsFromStack(startIndex);
-			}
-			
-			for (int i = 0; i < 4; i++) {
-				if (dragOrigin != board.getBlockStackAtIndex(i)) continue;
+			}else if (dragOrigin instanceof BlockStack) {
+				int stackIndex = board.getIndexOfBlockStack((BlockStack) dragOrigin);
 				
-				draggedCards = new Card[] {board.getBlockStackAtIndex(i).getTopCard()};
-				
-				dragStartRectangles = new Rectangle[] {getRectangleOfBlockStack(i)};
-				
-				board.getBlockStackAtIndex(i).removeCardFromStack();
+				dragStartRectangles = new Rectangle[] {getRectangleOfBlockStack(stackIndex)};	
 			}
 			
 			dragCurrentRectangles = dragStartRectangles.clone();
 			
-			for (int i = 0; i < 7; i++) {
-				if (dragDestination != board.getTableStackAtIndex(i)) continue;
-
-				int startIndex = board.getTableStackAtIndex(i).getNumberOfCardsOnStack();
+			if (dragDestination instanceof TableStack) {
+				int stackIndex = board.getIndexOfTableStack((TableStack) dragDestination);
+				int startIndex = ((TableStack) dragDestination).getNumberOfCardsOnStack();
 				
 				dragEndRectangles = new Rectangle[draggedCards.length];
 				
 				for (int j = 0; j < draggedCards.length; j++) {
-					dragEndRectangles[j] = getRectangleOfCardOnTableStack(i, startIndex + j);
+					dragEndRectangles[j] = getRectangleOfCardOnTableStack(stackIndex, startIndex + j);
 				}
 				
-				board.getTableStackAtIndex(i).addCardsToStack(draggedCards);
+			}else if (dragDestination instanceof BlockStack) {
+				int stackIndex = board.getIndexOfBlockStack((BlockStack) dragDestination);
+				
+				dragEndRectangles = new Rectangle[] {getRectangleOfBlockStack(stackIndex)};
 			}
 			
-			for (int i = 0; i < 4; i++) {
-				if (dragDestination != board.getBlockStackAtIndex(i)) continue;
-				
-				dragEndRectangles = new Rectangle[] {getRectangleOfBlockStack(i)};
-				
-				board.getBlockStackAtIndex(i).addCardToStack(draggedCards[0]);
-			}
+			board.applyMove(cardMove);
+			
+			move = null;
 			
 			int deltaX = (int) (dragEndRectangles[0].getCenterX() - dragStartRectangles[0].getCenterX());
 			int deltaY = (int) (dragEndRectangles[0].getCenterY() - dragStartRectangles[0].getCenterY());
@@ -242,8 +236,6 @@ public class BoardView extends JPanel implements ActionListener,
 			cursorStartPosition = cursorCurrentPosition;
 			cursorEndPosition = new Point(cursorStartPosition.x + deltaX, 
 			                              cursorStartPosition.y + deltaY);
-			
-			nextMove = null;
 			
 			startTime = System.currentTimeMillis();
 			endTime = startTime + 500;
@@ -384,7 +376,16 @@ public class BoardView extends JPanel implements ActionListener,
 			endTime = startTime + 500;
 			
 		}else if (ai != null) {
-			makeMove();
+			if (move == null) {
+				move = ai.getNextMove();
+				
+				if (move != null) {
+					prepareForMove();
+				}
+				
+			}else{
+				performMove();
+			}
 		}
 	}
 	

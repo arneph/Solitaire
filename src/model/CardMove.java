@@ -1,40 +1,37 @@
-package ai;
+package model;
 
-import model.*;
 import model.Cards.*;
 
-public class Move {
-	private Board board;
+public class CardMove extends Move {
 	private BoardElement origin;
 	private BoardElement destination;
 	private int count;
 	
-	public Move(Board b, BoardElement o, BoardElement d, int c) {
-		if (b == null) {
+	public CardMove(Board board, BoardElement origin, BoardElement destination, int count) {
+		super(board);
+		
+		if (origin == null || 
+			!getBoard().isElement(origin)) {
 			throw new IllegalArgumentException();
 		}
 		
-		if (o == null || !b.isElement(o) || 
-			d == null || !b.isElement(d)) {
+		if (destination == null || 
+			destination instanceof Deck || 
+			!getBoard().isElement(destination)) {
 			throw new IllegalArgumentException();
 		}
 		
-		if (o == d && !(o instanceof Deck)) {
+		if (origin == destination) {
 			throw new IllegalArgumentException();
 		}
 		
-		if (c <= 0) {
+		if (count <= 0) {
 			throw new IllegalArgumentException();
 		}
 		
-		board = b;
-		origin = o;
-		destination = d;
-		count = c;
-	}
-	
-	public Board getBoard() {
-		return board;
+		this.origin = origin;
+		this.destination = destination;
+		this.count = count;
 	}
 	
 	public BoardElement getOrigin() {
@@ -50,16 +47,6 @@ public class Move {
 	}
 	
 	public boolean isPossible() {
-		if (origin == board.getDeck() && 
-			destination == board.getDeck()) {
-			if (count != 1) return false;
-			
-			int m = board.getDeck().getNumberOfCardsOnDeck();
-			int n = board.getDeck().getNumberOfCardsOnDeckStack();
-			
-			return (m + n) > 0;
-		}
-		
 		Card[] cards = null;
 		
 		if (origin instanceof Deck) {

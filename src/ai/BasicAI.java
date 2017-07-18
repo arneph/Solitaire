@@ -1,11 +1,32 @@
 package ai;
 
+import java.util.*;
+
 import model.*;
 
 public class BasicAI extends AI {
 	
+	public BasicAI(Board board) {
+		super(board);
+	}
+	
+	private CardMove[] getPossibleCardMoves() {
+		Move[] moves = getBoard().getPossibleMoves();
+		
+		int n = 0;
+		CardMove[] cardMoves = new CardMove[moves.length];
+		
+		for (Move move : moves) {
+			if (!(move instanceof CardMove)) continue;
+			
+			cardMoves[n++] = (CardMove) move;
+		}
+		
+		return Arrays.copyOf(cardMoves, n);
+	}
+	
 	public Move getNextMove() {
-		Move[] moves = getPossibleMoves();
+		CardMove[] moves = getPossibleCardMoves();
 		
 		int freeTableStacks = 0;
 		boolean kingOnTop = false;
@@ -26,13 +47,13 @@ public class BasicAI extends AI {
 			}
 		}
 		
-		for (Move move : moves) {
+		for (CardMove move : moves) {
 			if (move.getDestination() instanceof BlockStack) {
 				return move;
 			}
 		}
 		
-		for (Move move : moves) {
+		for (CardMove move : moves) {
 			if (move.getOrigin() instanceof TableStack && 
 				move.getDestination() instanceof TableStack) {
 				TableStack origin = (TableStack) move.getOrigin();
@@ -44,7 +65,7 @@ public class BasicAI extends AI {
 			}
 		}
 		
-		for (Move move : moves) {
+		for (CardMove move : moves) {
 			if (move.getOrigin() instanceof TableStack && 
 				move.getDestination() instanceof TableStack) {
 				TableStack origin = (TableStack) move.getOrigin();
@@ -57,14 +78,20 @@ public class BasicAI extends AI {
 			}
 		}
 		
-		for (Move move : moves) {
+		for (CardMove move : moves) {
 			if (move.getOrigin() instanceof Deck && 
 				!(move.getDestination() instanceof Deck)) {
 				return move;
 			}
 		}
 		
-		return new Move(getBoard(), getBoard().getDeck(), getBoard().getDeck(), 1);
+		DeckMove deckMove = new DeckMove(getBoard());
+		
+		if (deckMove.isPossible()) {
+			return deckMove;
+		}else{
+			return null;
+		}
 	}
 	
 }

@@ -89,6 +89,20 @@ public class Board {
 		return tableStacks;
 	}
 	
+	public int getNumberOfCoveredCardsOnTableStacks() {
+		int n = 0;
+		
+		n += tableStacks[0].getNumberOfCoveredCards();
+		n += tableStacks[1].getNumberOfCoveredCards();
+		n += tableStacks[2].getNumberOfCoveredCards();
+		n += tableStacks[3].getNumberOfCoveredCards();
+		n += tableStacks[4].getNumberOfCoveredCards();
+		n += tableStacks[5].getNumberOfCoveredCards();
+		n += tableStacks[6].getNumberOfCoveredCards();
+		
+		return n;
+	}
+	
 	public BlockStack getBlockStackAtIndex(int index) {
 		if (index < 0 || index >= 4) {
 			throw new IllegalArgumentException();
@@ -153,6 +167,17 @@ public class Board {
 		return blockStacks;
 	}
 	
+	public int getLowestNumberOfCardsOnAnyBlockStack() {
+		int min = 13;
+		
+		min = Math.min(min, blockStacks[0].getNumberOfCardsOnStack());
+		min = Math.min(min, blockStacks[1].getNumberOfCardsOnStack());
+		min = Math.min(min, blockStacks[2].getNumberOfCardsOnStack());
+		min = Math.min(min, blockStacks[3].getNumberOfCardsOnStack());
+		
+		return min;
+	}
+	
 	public int getNumberOfCardsOnBlockStacks() {
 		int n = 0;
 		
@@ -203,13 +228,183 @@ public class Board {
 		return false;
 	}
 	
+	public Move[] getPossibleMoves() {
+		int n = 0;
+		Move[] moves = new Move[0];
+		
+		if (deck.getTotalNumberOfCardsOnDeck() > 0) {
+			moves = Arrays.copyOf(moves, ++n);
+			moves[n - 1] = new DeckMove(this);
+		}
+		
+		if (deck.getNumberOfCardsOnDeckStack() > 0) {
+			Card deckCard = deck.getTopCardOnDeckStack();
+			
+			for (int i = 0; i < 7; i++) {
+				TableStack stack = tableStacks[i];
+				
+				if (stack.canAddCardsToStack(new Card[] {deckCard})) {
+					moves = Arrays.copyOf(moves, ++n);
+					moves[n - 1] = new CardMove(this, deck, stack, 1);
+				}
+			}
+			
+			for (int i = 0; i < 4; i++) {
+				BlockStack stack = blockStacks[i];
+				
+				if (stack.canAddCardToStack(deckCard)) {
+					moves = Arrays.copyOf(moves, ++n);
+					moves[n - 1] = new CardMove(this, deck, stack, 1);
+				}
+			}
+		}
+		
+		for (int i = 0; i < 7; i++) {
+			TableStack a = tableStacks[i];
+			
+			int m1 = a.getNumberOfCardsOnStack();
+			int m2 = a.getNumberOfUncoveredCards();
+			
+			if (m2 == 0) continue;
+			
+			for (int c = 1; c <= m2; c++) {
+				Card[] cards = a.getCardsInRange(m1 - c, m1);
+				
+				for (int j = 0; j < 7; j++) {
+					if (i == j) continue;
+					
+					TableStack b = tableStacks[j];
+					
+					if (b.canAddCardsToStack(cards)) {
+						moves = Arrays.copyOf(moves, ++n);
+						moves[n - 1] = new CardMove(this, a, b, c);
+					}
+				}
+				
+				if (c > 1) continue;
+				
+				for (int j = 0; j < 4; j++) {
+					BlockStack b = blockStacks[j];
+					
+					if (b.canAddCardToStack(cards[0])) {
+						moves = Arrays.copyOf(moves, ++n);
+						moves[n - 1] = new CardMove(this, a, b, 1);
+					}
+				}
+			}
+		}
+
+		for (int i = 0; i < 4; i++) {
+			BlockStack blockStack = blockStacks[i];
+			
+			if (blockStack.getNumberOfCardsOnStack() == 0) continue;
+			
+			Card blockCard = blockStack.getTopCard();
+			
+			for (int j = 0; j < 7; j++) {
+				TableStack tableStack = tableStacks[j];
+				
+				if (tableStack.canAddCardsToStack(new Card[] {blockCard})) {
+					moves = Arrays.copyOf(moves, ++n);
+					moves[n - 1] = new CardMove(this, blockStack, tableStack, 1);
+				}
+			}
+		}
+		
+		return moves;
+	}
+	
+	public Card[] getCardsInMove(Move move) {
+		if (move == null || 
+			move.getBoard() != this || 
+			move.isPossible() == false) {
+			throw new IllegalArgumentException();
+		}
+		
+		if (move instanceof DeckMove) {
+			return new Card[0];
+			
+		}else if (move instanceof CardMove) {
+			CardMove cardMove = (CardMove) move;
+			
+			int n = cardMove.getCount();
+			
+			if (cardMove.getOrigin() instanceof Deck) {
+				return new Card[] {deck.getTopCardOnDeckStack()};
+				
+			}else if (cardMove.getOrigin() instanceof TableStack) {
+				TableStack stack = (TableStack) cardMove.getOrigin();
+				int m = stack.getNumberOfCardsOnStack();
+				
+				return stack.getCardsInRange(m - n, m);
+				
+			}else if (cardMove.getOrigin() instanceof BlockStack) {
+				BlockStack stack = (BlockStack) cardMove.getOrigin();
+				
+				return new Card[] {stack.getTopCard()};
+			}
+		}
+		
+		return null;
+	}
+	
+	public void applyMove(Move move) {
+		if (move == null || 
+			move.getBoard() != this || 
+			move.isPossible() == false) {
+			throw new IllegalArgumentException();
+		}
+		
+		if (move instanceof DeckMove) {
+			deck.turnDeck();
+			
+		}else if (move instanceof CardMove) {
+			CardMove cardMove = (CardMove) move;
+			Card[] cards = null;
+
+			int n = cardMove.getCount();
+			
+			if (cardMove.getOrigin() instanceof Deck) {
+				cards = new Card[] {deck.getTopCardOnDeckStack()};
+				
+				deck.removeCardFromDeckStack();
+				
+			}else if (cardMove.getOrigin() instanceof TableStack) {
+				TableStack stack = (TableStack) cardMove.getOrigin();
+				int m = stack.getNumberOfCardsOnStack();
+				
+				cards = stack.getCardsInRange(m - n, m);
+				
+				stack.removeCardsFromStack(m - n);
+				
+			}else if (cardMove.getOrigin() instanceof BlockStack) {
+				BlockStack stack = (BlockStack) cardMove.getOrigin();
+				
+				cards = new Card[] {stack.getTopCard()};
+				
+				stack.removeCardFromStack();
+			}
+			
+			if (cardMove.getDestination() instanceof TableStack) {
+				TableStack stack = (TableStack) cardMove.getDestination();
+				
+				stack.addCardsToStack(cards);
+				
+			}else if (cardMove.getDestination() instanceof BlockStack) {
+				BlockStack stack = (BlockStack) cardMove.getDestination();
+				
+				stack.addCardToStack(cards[0]);
+			}
+		}
+	}
+	
 	public boolean canFinishGameAutomatically() {
 		if (isGameOver()) {
 			return false;
 		}
 		
 		if (deck.getNumberOfCardsOnDeck() != 0) return false;
-		if (deck.getNumberOfCardsOnDeckStack() != 0) return false; //TODO: Improve
+		if (deck.getNumberOfCardsOnDeckStack() != 0) return false;
 		
 		if (tableStacks[0].getNumberOfCoveredCards() != 0) return false;
 		if (tableStacks[1].getNumberOfCoveredCards() != 0) return false;

@@ -94,7 +94,11 @@ public class Deck extends BoardElement {
 		
 		deckStack = d;
 	}
-
+	
+	public int getTotalNumberOfCardsOnDeck() {
+		return deck.length + deckStack.length;
+	}
+	
 	public void turnDeck() {
 		if (deck.length == 0) {
 			if (deckStack.length == 0) {

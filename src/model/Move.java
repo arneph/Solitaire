@@ -1,11 +1,9 @@
-package ai;
+package model;
 
-import model.*;
-
-public abstract class AI {
+public abstract class Move {
 	private Board board;
 	
-	public AI(Board board) {
+	public Move(Board board) {
 		if (board == null) {
 			throw new IllegalArgumentException();
 		}
@@ -17,6 +15,6 @@ public abstract class AI {
 		return board;
 	}
 	
-	public abstract Move getNextMove();
+	public abstract boolean isPossible();
 	
 }
