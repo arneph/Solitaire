@@ -412,6 +412,56 @@ public class Board {
 		}
 	}
 	
+	public void applyHypotheticalMove(Move move) {
+		if (move == null || 
+			move.getBoard() != this || 
+			move.isPossible() == false) {
+			throw new IllegalArgumentException();
+		}
+			
+		if (move instanceof DeckMove) {
+			deck.turnDeck();
+			
+		}else if (move instanceof CardMove) {
+			CardMove cardMove = (CardMove) move;
+			Card[] cards = null;
+
+			int n = cardMove.getCount();
+			
+			if (cardMove.getOrigin() instanceof Deck) {
+				cards = new Card[] {deck.getTopCardOnDeckStack()};
+				
+				deck.removeCardFromDeckStack();
+				
+			}else if (cardMove.getOrigin() instanceof TableStack) {
+				TableStack stack = (TableStack) cardMove.getOrigin();
+				int m = stack.getNumberOfCardsOnStack();
+				
+				cards = stack.getCardsInRange(m - n, m);
+				
+				stack.removeCardsFromStackHypothecially(m - n);
+				
+			}else if (cardMove.getOrigin() instanceof BlockStack) {
+				BlockStack stack = (BlockStack) cardMove.getOrigin();
+				
+				cards = new Card[] {stack.getTopCard()};
+				
+				stack.removeCardFromStack();
+			}
+			
+			if (cardMove.getDestination() instanceof TableStack) {
+				TableStack stack = (TableStack) cardMove.getDestination();
+				
+				stack.addCardsToStack(cards);
+				
+			}else if (cardMove.getDestination() instanceof BlockStack) {
+				BlockStack stack = (BlockStack) cardMove.getDestination();
+				
+				stack.addCardToStack(cards[0]);
+			}
+		}
+	}
+	
 	public Move equivalentMove(Move move) {
 		if (move instanceof DeckMove) {
 			if (deck.getTotalNumberOfCardsOnDeck() > 0) {
@@ -548,6 +598,44 @@ public class Board {
 		if (blockStacks[1].isComplete() == false) return false;
 		if (blockStacks[2].isComplete() == false) return false;
 		if (blockStacks[3].isComplete() == false) return false;
+		
+		return true;
+	}
+	
+	public static boolean equals(Board a, Board b) {
+		if (a == null || b == null) {
+			return false;
+		}
+		
+		if (a == b) {
+			return true;
+		}
+		
+		if (Deck.equals(a.getDeck(), b.getDeck()) == false) return false;
+		
+		if (TableStack.equals(a.getTableStackAtIndex(0), 
+		                      b.getTableStackAtIndex(0)) == false) return false;
+		if (TableStack.equals(a.getTableStackAtIndex(1), 
+		                      b.getTableStackAtIndex(1)) == false) return false;
+		if (TableStack.equals(a.getTableStackAtIndex(2), 
+		                      b.getTableStackAtIndex(2)) == false) return false;
+		if (TableStack.equals(a.getTableStackAtIndex(3), 
+		                      b.getTableStackAtIndex(3)) == false) return false;
+		if (TableStack.equals(a.getTableStackAtIndex(4), 
+		                      b.getTableStackAtIndex(4)) == false) return false;
+		if (TableStack.equals(a.getTableStackAtIndex(5), 
+		                      b.getTableStackAtIndex(5)) == false) return false;
+		if (TableStack.equals(a.getTableStackAtIndex(6), 
+		                      b.getTableStackAtIndex(6)) == false) return false;
+		
+		if (BlockStack.equals(a.getBlockStackAtIndex(0), 
+		                      b.getBlockStackAtIndex(0)) == false) return false;
+		if (BlockStack.equals(a.getBlockStackAtIndex(1), 
+		                      b.getBlockStackAtIndex(1)) == false) return false;
+		if (BlockStack.equals(a.getBlockStackAtIndex(2), 
+		                      b.getBlockStackAtIndex(2)) == false) return false;
+		if (BlockStack.equals(a.getBlockStackAtIndex(3), 
+		                      b.getBlockStackAtIndex(3)) == false) return false;
 		
 		return true;
 	}

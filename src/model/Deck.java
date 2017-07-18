@@ -143,6 +143,23 @@ public class Deck extends BoardElement {
 		deckStack = Arrays.copyOf(deckStack, n - 1);
 	}
 	
+	public static boolean equals(Deck a, Deck b) {
+		if (a == null || b == null) {
+			return false;
+		}
+		
+		if (a == b) {
+			return true;
+		}
+		
+		if (Arrays.deepEquals(a.deck, 
+		                      b.deck) == false) return false;
+		if (Arrays.deepEquals(a.deckStack, 
+		                      b.deckStack) == false) return false;
+		
+		return true;
+	}
+	
 	public Deck clone() {
 		Deck d = new Deck();
 		

@@ -22,6 +22,11 @@ public class ScoreAI extends AI {
 		
 		for (int i = 0; i < 7; i++) {
 			TableStack stack = board.getTableStackAtIndex(i);
+
+			if (stack.getNumberOfUncoveredCards() == 0 && 
+				stack.getNumberOfCoveredCards() > 0) {
+				score += 1.5;
+			}
 			
 			score -= 3.0 * Math.log1p(stack.getNumberOfCoveredCards());
 			score += 1.0 * stack.getNumberOfUncoveredCards();
@@ -60,7 +65,7 @@ public class ScoreAI extends AI {
 			Board board = getBoard().clone();
 			Move move = board.equivalentMove(moves[i]);
 			
-			board.applyMove(move);
+			board.applyHypotheticalMove(move);
 			
 			double score = getScore(getBoard(), board);
 			

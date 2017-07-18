@@ -120,6 +120,31 @@ public class TableStack extends BoardElement {
 		}
 	}
 	
+	public void removeCardsFromStackHypothecially(int cardIndex) {
+		if (cardIndex < coveredCards || 
+			cardIndex >= stack.length) {
+			throw new IllegalArgumentException();
+		}
+		
+		stack = Arrays.copyOf(stack, cardIndex);
+	}
+	
+	public static boolean equals(TableStack a, TableStack b) {
+		if (a == null || b == null) {
+			return false;
+		}
+		
+		if (a == b) {
+			return true;
+		}
+		
+		if (Arrays.deepEquals(a.stack, 
+		                      b.stack) == false) return false;
+		if (a.coveredCards != b.coveredCards) return false;
+		
+		return true;
+	}
+	
 	public TableStack clone() {
 		TableStack t = new TableStack();
 		

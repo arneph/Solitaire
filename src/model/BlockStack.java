@@ -85,6 +85,21 @@ public class BlockStack extends BoardElement {
 		return stack.length == 13;
 	}
 	
+	public static boolean equals(BlockStack a, BlockStack b) {
+		if (a == null || b == null) {
+			return false;
+		}
+		
+		if (a == b) {
+			return true;
+		}
+		
+		if (Arrays.deepEquals(a.stack, 
+		                      b.stack) == false) return false;
+		
+		return true;
+	}
+	
 	public BlockStack clone() {
 		BlockStack b = new BlockStack();
 		
