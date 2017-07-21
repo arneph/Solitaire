@@ -18,6 +18,7 @@ public class BoardView extends JPanel implements ActionListener,
 	private Board board;
 	private AI ai;
 	private Move move;
+	private int speed;
 	
 	private Card[] draggedCards;
 	private BoardElement dragOrigin;
@@ -39,6 +40,7 @@ public class BoardView extends JPanel implements ActionListener,
 		board = new Board();
 		ai = null;
 		move = null;
+		speed = 500;
 		
 		draggedCards = null;
 		dragOrigin = null;
@@ -72,6 +74,10 @@ public class BoardView extends JPanel implements ActionListener,
 	
 	public void setBoard(Board b) {
 		board = b;
+		ai = null;
+		
+		addMouseListener(this);
+		addMouseMotionListener(this);
 		
 		repaint();
 	}
@@ -163,7 +169,7 @@ public class BoardView extends JPanel implements ActionListener,
 		}
 		
 		startTime = System.currentTimeMillis();
-		endTime = startTime + 500;
+		endTime = startTime + speed;
 	}
 	
 	private void performMove() {
@@ -181,7 +187,7 @@ public class BoardView extends JPanel implements ActionListener,
 			move = null;
 			
 			startTime = System.currentTimeMillis();
-			endTime = startTime + 100;
+			endTime = startTime + speed / 5;
 			
 		}else if (move instanceof CardMove) {
 			CardMove cardMove = (CardMove) move;
@@ -239,8 +245,20 @@ public class BoardView extends JPanel implements ActionListener,
 			                              cursorStartPosition.y + deltaY);
 			
 			startTime = System.currentTimeMillis();
-			endTime = startTime + 500;
+			endTime = startTime + speed;
 		}
+	}
+	
+	//Speed:
+	public int getSpeed() {
+		return speed;
+	}
+	
+	public void setSpeed(int s) {
+		if (s < 20) s = 20;
+		if (s > 5000) s = 5000;
+		
+		speed = s;
 	}
 	
 	//Timer handling:
@@ -717,6 +735,18 @@ public class BoardView extends JPanel implements ActionListener,
 		
 		return new Rectangle(w - blockStacksWidth - 20 + index * (Images.CardW + 20), 20, 
 		                     Images.CardW, Images.CardH);
+	}
+	
+	public void setSize(Dimension d) {
+		super.setSize(d);
+		
+		repaint();
+	}
+	
+	public void setSize(int width, int height) {
+		super.setSize(width, height);
+		
+		repaint();
 	}
 	
 	//Drawing:
